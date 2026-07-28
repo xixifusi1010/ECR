@@ -1,0 +1,6 @@
+{
+  "note": "此文件已废弃，不再需要验证码机制。",
+  "new_payment_flow": "用户扫码支付 → 上传付款截图 → 站长在浏览器控制台执行 confirmPayment() → 用户刷新后自动解锁",
+  "how_to_confirm": "打开用户浏览器控制台(F12)，输入 confirmPayment() 即可为该用户解锁报告",
+  "wechat": "example_wechat"
+}

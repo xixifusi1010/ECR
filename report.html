@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>依恋类型测试 - 完整分析报告</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>完整分析报告</h1>
+    </div>
+
+    <!-- 未付费：显示付费引导（自动跳转回结果页，此页面仅作为兜底） -->
+    <div class="card" id="payWall">
+      <div style="text-align:center;padding:40px 0;" class="fade-in">
+        <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
+        <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">请先完成支付</h2>
+        <p style="color:var(--text-secondary);margin-bottom:20px;">请在结果页完成支付后查看完整报告</p>
+        <a href="result.html" class="btn btn-primary">返回结果页</a>
+      </div>
+    </div>
+
+    <!-- 已付费：显示完整报告 -->
+    <div id="reportContent" style="display:none;">
+      <div class="card">
+        <div class="report-header">
+          <div class="report-type" id="reportTypeName"></div>
+          <p class="report-subtitle">依恋类型深度分析报告</p>
+        </div>
+
+        <!-- 模块1：类型总览 -->
+        <div class="report-section" id="sectionOverview">
+          <h2>什么是你的依恋类型</h2>
+          <div id="overviewContent"></div>
+        </div>
+
+        <!-- 模块2：维度得分解读 -->
+        <div class="report-section" id="sectionDimension">
+          <h2>你的两个维度得分解读</h2>
+          <div id="dimensionScores" style="display:flex;gap:16px;margin-bottom:16px;">
+            <div class="score-card" style="flex:1;">
+              <div class="score-label">焦虑维度</div>
+              <div class="score-value" id="anxScoreDisplay" style="color:var(--warning);"></div>
+              <div class="score-range">范围 12-60 · 阈值 36</div>
+            </div>
+            <div class="score-card" style="flex:1;">
+              <div class="score-label">回避维度</div>
+              <div class="score-value" id="avoScoreDisplay" style="color:var(--primary);"></div>
+              <div class="score-range">范围 12-60 · 阈值 36</div>
+            </div>
+          </div>
+          <div id="anxAnalysisContent" style="margin-bottom:12px;"></div>
+          <div id="avoAnalysisContent"></div>
+        </div>
+
+        <!-- 模块3+4：核心模式深度分析 -->
+        <div class="report-section" id="sectionDeepDive">
+          <h2>你的核心模式深度分析</h2>
+          <div id="deepDiveContent"></div>
+        </div>
+
+        <!-- 模块5：通用内容 -->
+        <div class="report-section" id="sectionFormation">
+          <h2>形成原因</h2>
+          <div id="formationContent"></div>
+        </div>
+        <div class="report-section" id="sectionStrengths">
+          <h2>关系中的优势</h2>
+          <div id="strengthsContent"></div>
+        </div>
+        <div class="report-section" id="sectionChallenges">
+          <h2>可能遇到的挑战</h2>
+          <div id="challengesContent"></div>
+        </div>
+
+        <!-- 模块6：改善建议 -->
+        <div class="report-section" id="sectionSuggestions">
+          <h2>给你的改善建议</h2>
+          <div id="suggestionsContent"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin:24px 0;">
+        <a href="result.html" class="btn btn-outline">返回结果页</a>
+        <a href="index.html" class="btn btn-outline" style="margin-left:10px;">首页</a>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <p>本报告仅供个人参考，不构成心理诊断或医学建议。</p>
+      <p>全国心理援助热线：<strong>400-161-9995</strong>（24小时）</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2026 依恋类型测试</p>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/payment.js"></script>
+  <script>
+    (function() {
+      const payWall = document.getElementById('payWall');
+      const reportContent = document.getElementById('reportContent');
+      const reportTypeName = document.getElementById('reportTypeName');
+
+      // 检查解锁状态 - 未解锁则跳转回结果页
+      if (!Payment.isUnlocked()) {
+        window.location.href = 'result.html?error=not-unlocked';
+        return;
+      }
+
+      // 获取测试结果
+      const storedResult = localStorage.getItem('attachment_result');
+      if (!storedResult) {
+        window.location.href = 'test.html';
+        return;
+      }
+      const resultData = JSON.parse(storedResult);
+
+      // 重建完整的 result 对象
+      const fullResult = {
+        type: {
+          key: resultData.typeKey,
+          name: resultData.typeName,
+          color: resultData.typeColor,
+          tagline: resultData.tagline
+        },
+        scores: resultData.scores,
+        subScores: resultData.subScores,
+        anxietyLevel: resultData.anxietyLevel,
+        avoidanceLevel: resultData.avoidanceLevel,
+        anxSubLevels: resultData.anxSubLevels,
+        avoSubLevels: resultData.avoSubLevels
+      };
+
+      // 已解锁，显示报告
+      payWall.style.display = 'none';
+      reportContent.style.display = 'block';
+
+      const report = generateReport(fullResult);
+      if (!report) {
+        document.getElementById('overviewContent').innerHTML = '<p style="text-align:center;color:var(--text-secondary);">报告数据加载失败</p>';
+        return;
+      }
+
+      reportTypeName.textContent = report.typeOverview.title;
+      reportTypeName.style.color = resultData.typeColor || 'var(--primary)';
+
+      // 模块1：类型总览
+      document.getElementById('overviewContent').innerHTML = '<p>' + report.typeOverview.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+
+      // 模块2：维度得分
+      document.getElementById('anxScoreDisplay').textContent = report.dimensionAnalysis.anxietyScore;
+      document.getElementById('avoScoreDisplay').textContent = report.dimensionAnalysis.avoidanceScore;
+      document.getElementById('anxAnalysisContent').innerHTML = '<p>' + report.dimensionAnalysis.anxiety + '</p>';
+      document.getElementById('avoAnalysisContent').innerHTML = '<p>' + report.dimensionAnalysis.avoidance + '</p>';
+
+      // 模块3+4：核心模式深度分析
+      var deepDiveHtml = '';
+      report.deepDive.forEach(function(section) {
+        deepDiveHtml += '<div style="margin-bottom:20px;">';
+        deepDiveHtml += '<h3 style="font-size:1.05rem;font-weight:700;margin-bottom:8px;color:var(--primary);">' + section.title + '</h3>';
+        deepDiveHtml += '<p>' + section.content + '</p>';
+        deepDiveHtml += '</div>';
+      });
+      document.getElementById('deepDiveContent').innerHTML = deepDiveHtml;
+
+      // 模块5：通用内容
+      document.getElementById('formationContent').innerHTML = '<p>' + report.general.formation.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+      document.getElementById('strengthsContent').innerHTML = '<p>' + report.general.strengths.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+      document.getElementById('challengesContent').innerHTML = '<p>' + report.general.challenges.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+
+      // 模块6：改善建议
+      var suggestionsHtml = '';
+      report.suggestions.forEach(function(text) {
+        suggestionsHtml += '<div style="margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">';
+        suggestionsHtml += '<p>' + text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+        suggestionsHtml += '</div>';
+      });
+      document.getElementById('suggestionsContent').innerHTML = suggestionsHtml;
+    })();
+  </script>
+</body>
+</html>

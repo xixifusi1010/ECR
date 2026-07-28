@@ -1,0 +1,11 @@
+{
+  "name": "attachment-test",
+  "version": "1.0.0",
+  "description": "依恋类型测试 - 了解你的亲密关系模式",
+  "scripts": {
+    "dev": "npx serve . -l 3000 --no-clipboard",
+    "start": "npx serve . -l 3000 --no-clipboard"
+  },
+  "keywords": ["attachment", "test", "psychology"],
+  "license": "MIT"
+}

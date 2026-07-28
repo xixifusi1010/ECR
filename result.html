@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>依恋类型测试 - 你的结果</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>你的测试结果</h1>
+    </div>
+
+    <div class="card" id="resultCard">
+      <div id="loadingArea" style="text-align:center;padding:40px 0;">
+        <div class="spinner"></div>
+        <p style="margin-top:16px;color:var(--text-secondary);">正在分析你的答案...</p>
+      </div>
+
+      <div id="resultArea" style="display:none;" class="fade-in">
+        <!-- 类型展示 -->
+        <div class="result-type">
+          <div class="type-badge" id="typeBadge" style="background:var(--bg);color:var(--text-secondary);">你的依恋类型</div>
+          <div class="type-name" id="typeName"></div>
+          <p class="type-tagline" id="typeTagline"></p>
+        </div>
+
+        <!-- 维度得分 -->
+        <div class="result-scores">
+          <div class="score-card">
+            <div class="score-label">焦虑维度</div>
+            <div class="score-value" id="anxietyScore" style="color:var(--warning);">-</div>
+            <div class="score-range">范围 12-60 · 阈值 36</div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">回避维度</div>
+            <div class="score-value" id="avoidanceScore" style="color:var(--primary);">-</div>
+            <div class="score-range">范围 12-60 · 阈值 36</div>
+          </div>
+        </div>
+
+        <!-- 付费引导 -->
+        <div class="pay-guide slide-up">
+          <h3>📖 解锁完整深度分析报告</h3>
+          <p>了解你的依恋类型如何影响你的恋爱模式、日常表现和关系发展</p>
+          <div class="price">¥6.9</div>
+          <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">约5000字 · 6大模块深度解析 · 个性化改善建议</p>
+
+          <!-- 付费按钮区域 -->
+          <div id="payment-area">
+            <!-- 未解锁：显示付费按钮 -->
+            <button id="pay-btn" class="btn btn-primary btn-lg btn-block" onclick="Payment.startPayment()" style="display:none;">
+              查看完整报告 ¥6.90
+            </button>
+
+            <!-- 手动检查按钮（支付完成后若未自动跳转，可点此按钮） -->
+            <button id="manual-check-btn" class="btn btn-outline btn-block" onclick="Payment.manualCheck()" style="display:none;margin-top:10px;">
+              已完成支付，点击解锁
+            </button>
+
+            <!-- 已解锁：显示查看报告按钮 -->
+            <button id="unlocked-btn" class="btn btn-success btn-lg btn-block" onclick="window.location.href='report.html'" style="display:none;">查看完整报告（已解锁）</button>
+          </div>
+        </div>
+
+        <!-- 重新测试 -->
+        <div style="text-align:center;margin-top:16px;">
+          <a href="test.html" class="btn btn-outline">重新测试</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <p>本测试结果仅供个人参考，不构成心理诊断。</p>
+      <p>全国心理援助热线：<strong>400-161-9995</strong>（24小时）</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2026 依恋类型测试</p>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/payment.js"></script>
+  <script>
+    (function() {
+      const loadingArea = document.getElementById('loadingArea');
+      const resultArea = document.getElementById('resultArea');
+      const typeName = document.getElementById('typeName');
+      const typeTagline = document.getElementById('typeTagline');
+      const typeBadge = document.getElementById('typeBadge');
+      const anxietyScore = document.getElementById('anxietyScore');
+      const avoidanceScore = document.getElementById('avoidanceScore');
+      const payBtn = document.getElementById('pay-btn');
+      const manualCheckBtn = document.getElementById('manual-check-btn');
+      const unlockedBtn = document.getElementById('unlocked-btn');
+
+      // 从localStorage读取答案
+      const stored = localStorage.getItem('attachment_answers');
+      if (!stored) {
+        window.location.href = 'test.html';
+        return;
+      }
+
+      const answers = JSON.parse(stored);
+      const result = getAttachmentResult(answers);
+      const type = result.type;
+      const scores = result.scores;
+
+      // 延迟模拟计算过程
+      setTimeout(function() {
+        loadingArea.style.display = 'none';
+        resultArea.style.display = 'block';
+
+        // 填充数据
+        typeName.textContent = type.name;
+        typeName.style.color = type.color;
+        typeTagline.textContent = type.tagline;
+        typeBadge.textContent = type.name + '型依恋';
+        typeBadge.style.background = type.color + '18';
+        typeBadge.style.color = type.color;
+        anxietyScore.textContent = scores.anxiety;
+        avoidanceScore.textContent = scores.avoidance;
+
+        // 存储结果供报告页使用
+        localStorage.setItem('attachment_result', JSON.stringify({
+          typeKey: type.key,
+          typeName: type.name,
+          typeColor: type.color,
+          tagline: type.tagline,
+          scores: scores,
+          subScores: result.subScores,
+          anxietyLevel: result.anxietyLevel,
+          avoidanceLevel: result.avoidanceLevel,
+          anxSubLevels: result.anxSubLevels,
+          avoSubLevels: result.avoSubLevels
+        }));
+
+        // 检查解锁状态，显示对应区域
+        if (Payment.isUnlocked()) {
+          unlockedBtn.style.display = 'block';
+          payBtn.style.display = 'none';
+          manualCheckBtn.style.display = 'none';
+        } else {
+          payBtn.style.display = 'block';
+          manualCheckBtn.style.display = 'block';
+          unlockedBtn.style.display = 'none';
+        }
+      }, 800);
+    })();
+  </script>
+</body>
+</html>

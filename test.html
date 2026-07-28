@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>依恋类型测试 - 答题</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>依恋类型测试</h1>
+    </div>
+
+    <div class="card" id="app">
+      <!-- 进度 -->
+      <div class="progress-text" id="progressText">第 1 / 24 题</div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="progressFill" style="width: 4.17%;"></div>
+      </div>
+
+      <!-- 导航按钮 -->
+      <div class="nav-buttons">
+        <button class="btn btn-outline btn-sm" id="prevBtn" style="display:none;">← 上一题</button>
+        <span style="flex:1;"></span>
+        <span id="questionCounter" style="font-size:0.85rem;color:var(--text-light);">1 / 24</span>
+      </div>
+
+      <!-- 题目 -->
+      <div id="questionArea" class="fade-in">
+        <h2 id="questionText" style="font-size:1.15rem;font-weight:700;margin-bottom:20px;line-height:1.5;"></h2>
+        <div id="optionsContainer"></div>
+      </div>
+
+      <!-- 完成页 -->
+      <div id="completeArea" style="display:none;text-align:center;padding:40px 0;" class="fade-in">
+        <div style="font-size:3rem;margin-bottom:16px;">🎉</div>
+        <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:12px;">答题完成！</h2>
+        <p style="color:var(--text-secondary);margin-bottom:24px;">正在计算你的依恋类型...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/scoring.js"></script>
+  <script>
+    (function() {
+      const answers = {};
+      let currentIndex = 0;
+      const totalQuestions = QUESTIONS.length;
+
+      const questionText = document.getElementById('questionText');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      const questionArea = document.getElementById('questionArea');
+      const completeArea = document.getElementById('completeArea');
+      const prevBtn = document.getElementById('prevBtn');
+      const questionCounter = document.getElementById('questionCounter');
+
+      function renderQuestion(index) {
+        const q = QUESTIONS[index];
+        questionText.textContent = q.text;
+        optionsContainer.innerHTML = '';
+
+        q.options.forEach((opt, optIndex) => {
+          const btn = document.createElement('button');
+          btn.className = 'option-btn';
+          btn.textContent = opt.label;
+          // 如果该题已选过，高亮已选项
+          if (answers[q.id] === opt.score) {
+            btn.classList.add('selected');
+          }
+          btn.addEventListener('click', function() {
+            handleSelect(index, opt.score);
+          });
+          optionsContainer.appendChild(btn);
+        });
+
+        progressText.textContent = `第 ${index + 1} / ${totalQuestions} 题`;
+        progressFill.style.width = `${((index + 1) / totalQuestions) * 100}%`;
+        questionCounter.textContent = `${index + 1} / ${totalQuestions}`;
+
+        // 控制上一题按钮显示
+        prevBtn.style.display = index === 0 ? 'none' : 'inline-flex';
+      }
+
+      function handleSelect(index, score) {
+        const q = QUESTIONS[index];
+        answers[q.id] = score;
+
+        if (index < totalQuestions - 1) {
+          currentIndex = index + 1;
+          renderQuestion(currentIndex);
+          // 重新触发动画
+          questionArea.classList.remove('fade-in');
+          void questionArea.offsetWidth;
+          questionArea.classList.add('fade-in');
+        } else {
+          // 所有题目完成
+          questionArea.style.display = 'none';
+          completeArea.style.display = 'block';
+          progressFill.style.width = '100%';
+          progressText.textContent = '已完成';
+
+          // 延迟跳转到结果页
+          setTimeout(function() {
+            localStorage.setItem('attachment_answers', JSON.stringify(answers));
+            window.location.href = 'result.html';
+          }, 1200);
+        }
+      }
+
+      // 上一题
+      prevBtn.addEventListener('click', function() {
+        if (currentIndex > 0) {
+          currentIndex--;
+          renderQuestion(currentIndex);
+          questionArea.classList.remove('fade-in');
+          void questionArea.offsetWidth;
+          questionArea.classList.add('fade-in');
+        }
+      });
+
+      // 初始化
+      renderQuestion(0);
+    })();
+  </script>
+</body>
+</html>
